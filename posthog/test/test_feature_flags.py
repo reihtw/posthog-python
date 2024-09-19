@@ -1597,6 +1597,35 @@ class TestLocalEvaluation(unittest.TestCase):
         self.assertEqual(patch_decide.call_count, 2)
 
     @mock.patch("posthog.client.decide")
+    def test_boolean_feature_flag_payload_for_capitalized_feature_flags_decide(
+        self, patch_decide
+    ):
+        patch_decide.return_value = {
+            "featureFlagPayloads": {"PERSON-FLAG": 300}
+        }
+
+        self.assertEqual(
+            self.client.get_feature_flag_payload(
+                "PERSON-FLAG",
+                "some-distinct-id",
+                person_properties={"region": "USA"}
+            ),
+            300,
+        )
+
+        self.assertEqual(
+            self.client.get_feature_flag_payload(
+                "PERSON-FLAG",
+                "some-distinct-id",
+                match_value=True,
+                person_properties={"region": "USA"},
+            ),
+            300
+        )
+
+        self.assertEqual(patch_decide.call_count, 2)
+
+    @mock.patch("posthog.client.decide")
     def test_multivariate_feature_flag_payloads(self, patch_decide):
         multivariate_flag = {
             "id": 1,
